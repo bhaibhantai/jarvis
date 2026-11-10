@@ -1,0 +1,2 @@
+const input=document.getElementById('key'),button=document.getElementById('save'),status=document.getElementById('status')
+button.addEventListener('click',async()=>{button.disabled=true;status.textContent='Encrypting key…';try{await window.jarvisDesktop.saveApiKey(input.value.trim());status.textContent='Saved securely. You can close this window.';input.value=''}catch(e){status.textContent=e.message;button.disabled=false}})
