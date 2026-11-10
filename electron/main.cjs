@@ -4,6 +4,7 @@ const { join } = require('node:path')
 const fs = require('node:fs')
 
 let mainWindow
+let keyWindow
 let bridge
 const keyFile = join(app.getPath('userData'), 'openrouter-key.bin')
 
@@ -30,6 +31,7 @@ function createKeyWindow() {
     backgroundColor: '#06111d',
     webPreferences: { preload: join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false },
   })
+  keyWindow = win
   win.loadFile(join(__dirname, 'key.html'))
   return win
 }
@@ -48,6 +50,8 @@ ipcMain.handle('jarvis:save-key', (_event, key) => {
   saveKey(key.trim())
   if (bridge) { bridge.kill(); bridge = null }
   startBridge()
+  if (keyWindow && !keyWindow.isDestroyed()) keyWindow.close()
+  createMainWindow()
   return true
 })
 ipcMain.handle('jarvis:open-settings', () => createKeyWindow())
