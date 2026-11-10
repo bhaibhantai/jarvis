@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>J.A.R.V.I.S. Setup</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0,#12314a,#06111d 60%);color:#d9f6ff;font:15px Segoe UI,Arial;padding:34px}
+h1{letter-spacing:5px;color:#56dfff;font-size:22px}p{color:#91b6c6;line-height:1.6}label{display:block;margin:24px 0 8px;color:#8bdff1}
+input{width:100%;padding:14px;background:#071a28;border:1px solid #1c7891;border-radius:8px;color:white;font-size:14px;outline:none}
+button{margin-top:18px;padding:13px 20px;background:#00b8dc;border:0;border-radius:7px;color:#00131c;font-weight:700;cursor:pointer;width:100%}
+small{display:block;color:#7895a3;margin-top:14px}#status{margin-top:12px;color:#ffb7a7}
+</style></head><body>
+<h1>J.A.R.V.I.S.</h1><p>Connect your OpenRouter account to activate the assistant's AI brain. Your key is encrypted by Windows and stays on this laptop.</p>
+<label for="key">OPENROUTER API KEY</label><input id="key" type="password" placeholder="sk-or-v1-..." autocomplete="off">
+<button id="save">SECURELY SAVE & LAUNCH</button><div id="status" role="status"></div>
+<small>Your key is never written to the repository or sent to the browser.</small>
+<script src="key.js"></script></body></html>
