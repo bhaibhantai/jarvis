@@ -44,7 +44,7 @@ wss.on('connection',ws=>{
           const name=call.function.name
           send({type:'tool',name})
           let result
-          try{const args=JSON.parse(call.function.arguments||'{}');result=await executeDesktopTool(name,args,ws,id)}
+          try{const args=JSON.parse(call.function.arguments||'{}');result=await executeDesktopTool(name,args,ws,id,controller.signal)}
           catch(error){result={ok:false,error:error.message||String(error)}}
           history.push({role:'tool',tool_call_id:call.id,name,content:JSON.stringify(result)})
         }
