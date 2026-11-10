@@ -1,0 +1,17 @@
+appId: com.thesmartaitoolkit.jarvis
+productName: J.A.R.V.I.S.
+directories:
+  output: release
+files:
+  - dist/**
+  - electron/**
+  - bridge/openrouter-server.mjs
+  - node_modules/ws/**
+  - package.json
+asar: true
+win:
+  target:
+    - nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
