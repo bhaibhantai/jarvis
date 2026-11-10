@@ -36,11 +36,23 @@ const definitions = [
   { type: 'function', function: { name: 'recall_memory', description: 'Read saved JARVIS memory notes.', parameters: { type: 'object', properties: {}, additionalProperties: false } } },
 ]
 
-function safeWorkspacePath(relativePath = '') {
+async function safeWorkspacePath(relativePath = '') {
   if (typeof relativePath !== 'string' || path.isAbsolute(relativePath)) throw new Error('Use a relative path inside the JARVIS Workspace.')
   const target = path.resolve(WORKSPACE, relativePath)
   const rel = path.relative(WORKSPACE, target)
   if (rel.startsWith('..') || path.isAbsolute(rel)) throw new Error('That path is outside the JARVIS Workspace.')
+  // Refuse symlinks in every existing path component to prevent workspace escape.
+  let cursor = WORKSPACE
+  for (const part of rel.split(path.sep).filter(Boolean)) {
+    cursor = path.join(cursor, part)
+    try {
+      const stat = await fs.lstat(cursor)
+      if (stat.isSymbolicLink()) throw new Error('Symbolic links are not allowed inside the JARVIS Workspace.')
+    } catch (error) {
+      if (error.code === 'ENOENT') break
+      throw error
+    }
+  }
   return target
 }
 
@@ -96,7 +108,7 @@ export async function executeDesktopTool(name, args, ws, askId) {
       return { os: os.type() + ' ' + os.release(), hostname: os.hostname(), cpuCores: os.cpus().length, memoryTotalGB: +(total / 1073741824).toFixed(1), memoryFreeGB: +(free / 1073741824).toFixed(1), workspace: WORKSPACE }
     }
     case 'list_workspace': {
-      const dir = safeWorkspacePath(args.folder || '')
+      const dir = await safeWorkspacePath(args.folder || '')
       const entries = await fs.readdir(dir, { withFileTypes: true })
       return { folder: path.relative(WORKSPACE, dir) || '.', entries: await Promise.all(entries.slice(0, 100).map(async e => ({ name: e.name, type: e.isDirectory() ? 'folder' : 'file' }))) }
     }
@@ -117,13 +129,13 @@ export async function executeDesktopTool(name, args, ws, askId) {
       return { matches: found }
     }
     case 'create_folder': {
-      const target = safeWorkspacePath(args.folder)
+      const target = await safeWorkspacePath(args.folder)
       if (!await requestApproval(ws, askId, 'Create folder', 'Create this folder?\n' + target)) return { ok: false, message: 'User declined the operation.' }
       await fs.mkdir(target, { recursive: true })
       return { ok: true, created: path.relative(WORKSPACE, target) }
     }
     case 'create_text_file': {
-      const target = safeWorkspacePath(args.file)
+      const target = await safeWorkspacePath(args.file)
       if (!/\.(txt|md|csv|json)$/i.test(target)) throw new Error('Only .txt, .md, .csv and .json files can be created by this tool.')
       if (!await requestApproval(ws, askId, 'Create text file', 'Create this new file?\n' + target + '\n\nExisting files will not be overwritten.')) return { ok: false, message: 'User declined the operation.' }
       await fs.mkdir(path.dirname(target), { recursive: true })
