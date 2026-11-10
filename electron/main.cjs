@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, safeStorage, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, safeStorage, dialog, utilityProcess, session } = require('electron')
 const { spawn } = require('node:child_process')
 const { join } = require('node:path')
 const fs = require('node:fs')
@@ -19,11 +19,11 @@ function saveKey(key) {
 }
 function startBridge() {
   if (bridge) return
-  bridge = spawn(process.execPath, [join(__dirname, '..', 'bridge', 'openrouter-server.mjs')], {
-    env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', OPENROUTER_API_KEY: readKey() },
-    stdio: 'inherit', windowsHide: true,
+  bridge = utilityProcess.fork(join(__dirname, '..', 'bridge', 'openrouter-server.mjs'), [], {
+    env: { ...process.env, OPENROUTER_API_KEY: readKey() },
+    stdio: 'inherit', serviceName: 'JARVIS Local Desktop Agent',
   })
-  bridge.on('exit', () => { bridge = null })
+  bridge.once('exit', () => { bridge = null })
 }
 function createKeyWindow() {
   const win = new BrowserWindow({
@@ -56,6 +56,9 @@ ipcMain.handle('jarvis:save-key', (_event, key) => {
 })
 ipcMain.handle('jarvis:open-settings', () => createKeyWindow())
 app.whenReady().then(() => {
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    callback(permission === 'media' || permission === 'microphone' || permission === 'camera')
+  })
   if (!safeStorage.isEncryptionAvailable()) {
     dialog.showErrorBox('Secure storage unavailable', 'J.A.R.V.I.S. cannot securely store your OpenRouter key on this Windows account.')
     app.quit(); return
