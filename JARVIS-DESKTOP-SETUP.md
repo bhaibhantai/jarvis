@@ -17,3 +17,6 @@ Default: `openai/gpt-4o-mini`. Override with `JARVIS_OPENROUTER_MODEL` in the pr
 
 ## Important capability boundary
 This first desktop integration enables streamed OpenRouter conversation in the existing HUD. It does not yet port the Claude Agent SDK's MCP tool execution, browser automation, native Windows control, or persistent cross-session memory. Those capabilities need dedicated OpenRouter-compatible tools and explicit permission gates; the interface must not imply they are already active.
+
+
+Windows packaging automation is configured in `.github/workflows/windows-desktop.yml`.
