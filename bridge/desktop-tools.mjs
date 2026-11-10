@@ -78,7 +78,11 @@ export async function executeDesktopTool(name, args, ws, askId) {
       const key = String(args.app || '').toLowerCase()
       const executable = apps[key]
       if (!executable) throw new Error('That application is not on the supported allowlist.')
-      await launch(executable)
+      if (key === 'chrome' || key === 'edge' || key === 'browser' || key === 'vscode' || key === 'visual studio code') {
+        await launch('cmd.exe', ['/d', '/s', '/c', 'start', '', executable === 'code.cmd' ? 'code' : executable])
+      } else {
+        await launch(executable)
+      }
       return { ok: true, message: key + ' opened.' }
     }
     case 'open_url': {
@@ -123,7 +127,9 @@ export async function executeDesktopTool(name, args, ws, askId) {
       if (!/\.(txt|md|csv|json)$/i.test(target)) throw new Error('Only .txt, .md, .csv and .json files can be created by this tool.')
       if (!await requestApproval(ws, askId, 'Create text file', 'Create this new file?\n' + target + '\n\nExisting files will not be overwritten.')) return { ok: false, message: 'User declined the operation.' }
       await fs.mkdir(path.dirname(target), { recursive: true })
-      await fs.writeFile(target, String(args.content ?? ''), { encoding: 'utf8', flag: 'wx' })
+      const body = String(args.content ?? '')
+      if (body.length > 50000) throw new Error('Text files are limited to 50,000 characters.')
+      await fs.writeFile(target, body, { encoding: 'utf8', flag: 'wx' })
       return { ok: true, created: path.relative(WORKSPACE, target) }
     }
     case 'remember_note': {
