@@ -30,6 +30,7 @@ jobs:
           if (!(Test-Path "dist/index.html")) { throw "Vite build did not produce dist/index.html" }
           if (!(Test-Path "electron/main.cjs")) { throw "Electron main process is missing" }
           if (!(Test-Path "bridge/openrouter-server.mjs")) { throw "OpenRouter bridge is missing" }
+          if (!(Test-Path "bridge/desktop-tools.mjs")) { throw "Windows desktop tools are missing" }
       - name: Package Windows installer
         run: npx electron-builder --win nsis --publish never
         env:
