@@ -35,6 +35,8 @@ type Frame = {
   seconds?: number
   when?: string
   servers?: Array<string | { name?: string }>
+  title?: string
+  detail?: string
 }
 
 /** Every question gets an id so its answer can be told from anyone else's. */
@@ -202,6 +204,13 @@ function dispatch(ws: WebSocket) {
         })
           .then(reply)
           .catch((err) => reply({ error: String(err?.message ?? err) }))
+      }
+    } else if (msg.type === 'approval' && msg.id) {
+      // Native confirmation is deliberately explicit: the model cannot approve
+      // its own file writes or memory changes.
+      const approved = window.confirm(`${msg.title ?? 'J.A.R.V.I.S. requests permission'}\n\n${msg.detail ?? ''}\n\nAllow this operation?`)
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'approval-result', id: msg.id, approved }))
       }
     } else if (msg.type === 'ui' && msg.op) {
       // A `ui` frame with no args is normal — reset and clear take none — so an
