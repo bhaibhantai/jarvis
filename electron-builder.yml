@@ -6,6 +6,7 @@ files:
   - dist/**
   - electron/**
   - bridge/openrouter-server.mjs
+  - bridge/desktop-tools.mjs
   - node_modules/ws/**
   - package.json
 asar: true
