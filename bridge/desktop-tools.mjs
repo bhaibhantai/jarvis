@@ -64,12 +64,16 @@ function launch(command, args = []) {
   })
 }
 
-async function requestApproval(ws, askId, title, detail) {
+async function requestApproval(ws, askId, title, detail, signal) {
   const approvalId = 'p' + Math.random().toString(36).slice(2)
   ws.send(JSON.stringify({ type: 'approval', ask: askId, id: approvalId, title, detail }))
   return new Promise(resolve => {
-    const timer = setTimeout(() => { pendingApprovals.delete(approvalId); resolve(false) }, 60000)
-    pendingApprovals.set(approvalId, approved => { clearTimeout(timer); resolve(approved === true) })
+    const finish = approved => { clearTimeout(timer); signal?.removeEventListener('abort', abort); pendingApprovals.delete(approvalId); resolve(approved === true) }
+    const abort = () => finish(false)
+    const timer = setTimeout(() => finish(false), 60000)
+    pendingApprovals.set(approvalId, approved => finish(approved))
+    if (signal?.aborted) abort()
+    else signal?.addEventListener('abort', abort, { once: true })
   })
 }
 const pendingApprovals = new Map()
@@ -84,7 +88,7 @@ export function answerApproval(id, approved) {
 export const toolSchemas = definitions
 export const workspacePath = WORKSPACE
 
-export async function executeDesktopTool(name, args, ws, askId) {
+export async function executeDesktopTool(name, args, ws, askId, signal) {
   switch (name) {
     case 'open_app': {
       const key = String(args.app || '').toLowerCase()
@@ -147,7 +151,7 @@ export async function executeDesktopTool(name, args, ws, askId) {
     case 'remember_note': {
       const note = String(args.note || '').trim().slice(0, 1000)
       if (!note) throw new Error('Memory note is empty.')
-      if (!await requestApproval(ws, askId, 'Save to JARVIS memory', note)) return { ok: false, message: 'User declined the operation.' }
+      if (!await requestApproval(ws, askId, 'Save to JARVIS memory', note, signal)) return { ok: false, message: 'User declined the operation.' }
       let notes = []
       try { notes = JSON.parse(await fs.readFile(MEMORY_FILE, 'utf8')) } catch {}
       notes.push({ note, savedAt: new Date().toISOString() })
