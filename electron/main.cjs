@@ -1,5 +1,4 @@
 const { app, BrowserWindow, ipcMain, safeStorage, dialog, utilityProcess, session } = require('electron')
-const { spawn } = require('node:child_process')
 const { join } = require('node:path')
 const fs = require('node:fs')
 
